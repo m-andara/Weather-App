@@ -3,28 +3,29 @@ package com.example.weatherapp
 import android.content.pm.PackageManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import androidx.appcompat.app.AlertDialog
-import androidx.core.content.ContextCompat
-import androidx.fragment.app.FragmentManager
-import com.example.weatherapp.Dialogs.PermissionsDialog
+import android.util.Log
+import com.example.weatherapp.Networking.WeatherNetworking
+import com.example.weatherapp.Repository.WeatherRepository
 import com.example.weatherapp.databinding.ActivityMainBinding
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
-import java.security.Permission
-import java.util.jar.Manifest
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private val LOCATION_REQUEST_CODE = 756
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
-        Permissions.requestLocationPermission(
-            this@MainActivity,
-            binding.root.context,
-            supportFragmentManager)
+        WeatherNetworking.requestLocationPermission(
+            this,
+            binding.root.context
+        ) {
+            setWeatherData()
+        }
     }
 
     override fun onRequestPermissionsResult(
@@ -33,5 +34,32 @@ class MainActivity : AppCompatActivity() {
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        when(requestCode) {
+            LOCATION_REQUEST_CODE -> {
+                if(
+                    grantResults.isNotEmpty() &&
+                    grantResults[0] == PackageManager.PERMISSION_GRANTED &&
+                    grantResults[1] == PackageManager.PERMISSION_GRANTED
+                ) {
+                    setWeatherData()
+                }
+            }
+        }
+    }
+
+    fun setWeatherData() {
+        try {
+            fusedLocationClient.lastLocation
+                .addOnSuccessListener { location ->
+                    WeatherRepository.setCoords(
+                        location.latitude,
+                        location.longitude
+                    )
+                    WeatherNetworking.getUserCity(this, location.latitude,location.longitude)
+                }
+        } catch(e: SecurityException) {
+            Log.v("Location permissions", "There was a problem with location services permissions")
+        }
+
     }
 }
