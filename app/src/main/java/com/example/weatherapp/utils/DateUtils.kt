@@ -44,6 +44,7 @@ class DateUtils {
         for(x in 0..4) {
             if((startHour + x) > 23) {
                 hours.add(formatTime((startHour + x) - 24))
+                continue
             }
             hours.add(formatTime(startHour + x))
         }
