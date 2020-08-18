@@ -6,6 +6,6 @@ import retrofit2.http.Query
 
 interface WeatherApi {
 
-    @GET("/onecall?exclude=minutely,hourly&units=imperial&{lat}&{lon}&{id}")
-    fun getWeather(@Query("lat") lat: Double, @Query("lon") lon: Double, @Query("appid") id: String): Call<CurrentWeather>
+    @GET("/data/2.5/onecall?&exclude=minutely&units=imperial")
+    fun getWeather(@Query("lat") lat: Double, @Query("lon") lon: Double, @Query("appid") id: String): Call<CurrentWeatherItem>
 }
